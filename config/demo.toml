@@ -1,0 +1,23 @@
+# Demo override.
+# Used by the advisor live: `bmt-run --override config/demo.toml --batch all`.
+# Only includes values that differ from default.toml; everything else is inherited.
+
+[stress.cpu]
+duration_seconds = 10
+
+[stress.memory]
+percent_of_total = 20
+duration_seconds = 10
+
+[stress.disk_fio]
+runtime_seconds = 10
+size = "256M"
+
+[stress.sysbench_cpu]
+duration_seconds = 10
+
+[network.mesh]
+duration_seconds = 10
+
+[network.encapsulation]
+duration_seconds = 10

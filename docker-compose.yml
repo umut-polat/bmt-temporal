@@ -1,0 +1,63 @@
+# Infrastructure for local development.
+# Worker (bmt-worker) and CLI (bmt-run) run on the host with a Python venv;
+# this file only spins up the stateful services they connect to.
+#
+# Usage:
+#   docker compose up -d
+#   bmt-worker                  # in one terminal
+#   bmt-run --use-batch ...     # in another
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: bmt-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  temporal:
+    image: temporalio/auto-setup:1.29.6
+    container_name: bmt-temporal
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PWD=postgres
+      - POSTGRES_SEEDS=postgres
+      - DEFAULT_NAMESPACE=openstack-test
+      - DEFAULT_NAMESPACE_RETENTION=7d
+    ports:
+      - "7233:7233"
+    healthcheck:
+      test: ["CMD", "tctl", "--ad", "temporal:7233", "cluster", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  temporal-ui:
+    image: temporalio/ui:2.49.1
+    container_name: bmt-temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000,http://localhost:8233
+    ports:
+      - "8233:8080"
+
+volumes:
+  postgres-data:

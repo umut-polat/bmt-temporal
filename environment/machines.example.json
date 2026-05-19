@@ -1,0 +1,31 @@
+{
+  "machines": [
+    {
+      "name": "host-a",
+      "host": "10.0.0.10",
+      "user": "ubuntu",
+      "auth": "password",
+      "mesh_iface": "ens5f0",
+      "test_disks": ["/dev/sda", "/dev/sdb"],
+      "notes": "Example host using SSH password auth. Override credentials in environment/secrets.env."
+    },
+    {
+      "name": "host-b",
+      "host": "10.0.0.11",
+      "user": "ubuntu",
+      "auth": "ssh_key",
+      "mesh_iface": "ens5f0",
+      "test_disks": ["/dev/sdb", "/dev/sdc"],
+      "notes": "Example host using SSH key auth."
+    },
+    {
+      "name": "host-c",
+      "host": "10.0.0.12",
+      "user": "ubuntu",
+      "auth": "ssh_key",
+      "mesh_iface": "ens5f0",
+      "test_disks": ["/dev/sdb", "/dev/sdc"],
+      "notes": "Example host using SSH key auth."
+    }
+  ]
+}

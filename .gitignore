@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+dist/
+build/
+
+environment/secrets.env
+environment/machines.json
+*.local.toml
+.DS_Store
