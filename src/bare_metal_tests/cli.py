@@ -103,6 +103,7 @@ def _build_plan(
         retry_initial_seconds=config.temporal.retry.initial_interval_seconds,
         retry_backoff=config.temporal.retry.backoff_coefficient,
         retry_max_attempts=config.temporal.retry.maximum_attempts,
+        mesh_mtu=config.network.mesh.mtu,
         stress=_build_stress(config) if "stress" in phases else None,
         batch_id=batch_id,
     )
