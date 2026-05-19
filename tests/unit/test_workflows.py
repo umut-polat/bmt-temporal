@@ -51,7 +51,10 @@ async def fake_ssh_check(machine: MachineSpec) -> PhaseResult:
 
 @activity.defn(name="apt_install")
 async def fake_apt_install(
-    machine: MachineSpec, packages: list[str], mesh_mtu: int = 9000
+    machine: MachineSpec,
+    packages: list[str],
+    mesh_mtu: int = 9000,
+    set_mesh_mtu: bool = True,
 ) -> PhaseResult:
     return _ok(PHASE_APT_INSTALL)
 
@@ -125,13 +128,16 @@ def _plan(phases: list[str]) -> MachinePlan:
 
 
 async def _run_workflow(plan: MachinePlan) -> object:
-    async with await WorkflowEnvironment.start_time_skipping(
-        data_converter=DATA_CONVERTER,
-    ) as env, Worker(
-        env.client,
-        task_queue="t",
-        workflows=[MachineWorkflow],
-        activities=_ALL_FAKES,
+    async with (
+        await WorkflowEnvironment.start_time_skipping(
+            data_converter=DATA_CONVERTER,
+        ) as env,
+        Worker(
+            env.client,
+            task_queue="t",
+            workflows=[MachineWorkflow],
+            activities=_ALL_FAKES,
+        ),
     ):
         return await env.client.execute_workflow(
             MachineWorkflow.run,

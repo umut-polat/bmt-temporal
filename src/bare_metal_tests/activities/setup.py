@@ -75,21 +75,25 @@ async def apt_install(
     machine: MachineSpec,
     packages: list[str],
     mesh_mtu: int = 9000,
+    set_mesh_mtu: bool = True,
 ) -> PhaseResult:
-    """Install apt packages and set the mesh interface MTU.
+    """Install apt packages and optionally set the mesh interface MTU.
 
-    MTU 9000 is required by the mesh phase's jumbo-frame check. Doing it
-    here keeps the network test idempotent on subsequent runs.
+    Setting the MTU here keeps the network test idempotent on subsequent
+    runs. Disable with ``set_mesh_mtu=False`` when the switch can't
+    carry jumbo frames and the NIC should keep its default.
     """
     machine = as_machine(machine)
     started = _now()
     secrets = load_secrets()
     pkg_args = " ".join(packages)
-    install_cmd = (
-        "sh -c 'DEBIAN_FRONTEND=noninteractive apt-get update "
-        f"&& DEBIAN_FRONTEND=noninteractive apt-get install -y {pkg_args} "
-        f"&& ip link set {machine.mesh_iface} mtu {mesh_mtu}'"
+    base_cmd = (
+        f"DEBIAN_FRONTEND=noninteractive apt-get update "
+        f"&& DEBIAN_FRONTEND=noninteractive apt-get install -y {pkg_args}"
     )
+    if set_mesh_mtu:
+        base_cmd += f" && ip link set {machine.mesh_iface} mtu {mesh_mtu}"
+    install_cmd = f"sh -c '{base_cmd}'"
     try:
         async with open_ssh(machine, secrets) as ssh:
             result = await long_run(

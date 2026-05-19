@@ -93,6 +93,7 @@ class MachinePlan:
     retry_backoff: float
     retry_max_attempts: int
     mesh_mtu: int = 9000
+    set_mesh_mtu: bool = True
     stress: StressSpec | None = None
     batch_id: str | None = None
 
@@ -135,7 +136,12 @@ class MachineWorkflow:
             if ssh.status == STATUS_PASSED:
                 apt = await workflow.execute_activity(
                     "apt_install",
-                    args=[plan.machine, plan.apt_packages, plan.mesh_mtu],
+                    args=[
+                        plan.machine,
+                        plan.apt_packages,
+                        plan.mesh_mtu,
+                        plan.set_mesh_mtu,
+                    ],
                     result_type=PhaseResult,
                     start_to_close_timeout=setup_timeout,
                     heartbeat_timeout=timedelta(seconds=60),

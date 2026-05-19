@@ -35,6 +35,7 @@ class SetupConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     apt_packages: list[str]
     ssh_connect_timeout_seconds: int
+    set_mesh_mtu: bool = True
 
 
 class StressCpuConfig(BaseModel):

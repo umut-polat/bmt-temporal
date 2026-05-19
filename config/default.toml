@@ -15,6 +15,10 @@ apt_packages = [
     "dmidecode",
 ]
 ssh_connect_timeout_seconds = 15
+# When true, the apt_install activity also sets the mesh interface MTU
+# to [network.mesh].mtu. Switch off if the upstream switch can't carry
+# jumbo frames and you want to leave the NIC at its default.
+set_mesh_mtu = true
 
 [stress.cpu]
 duration_seconds = 60
