@@ -9,6 +9,7 @@ from bare_metal_tests.ssh.parsers import (
     parse_iperf3_json,
     parse_lscpu,
     parse_meminfo,
+    parse_smartctl_json,
     parse_sysbench_cpu,
 )
 
@@ -64,6 +65,51 @@ def test_parse_fio_json_reads_iops_and_bandwidth() -> None:
     assert parsed["read_iops"] == 1234.5
     assert parsed["read_bw_mb_s"] == 5000 / 1024.0
     assert parsed["read_latency_us"] == 100.0
+
+
+def test_parse_smartctl_json_healthy_disk() -> None:
+    sample = {
+        "model_name": "SAMSUNG MZ7L3480HCHQ-00A07",
+        "serial_number": "S664NN0X417584",
+        "user_capacity": {"bytes": 480103981056},
+        "smart_status": {"passed": True},
+        "ata_smart_attributes": {
+            "table": [
+                {"name": "Reallocated_Sector_Ct", "raw": {"value": 0}},
+                {"name": "Current_Pending_Sector", "raw": {"value": 0}},
+                {"name": "Offline_Uncorrectable", "raw": {"value": 0}},
+            ]
+        },
+    }
+    parsed = parse_smartctl_json(json.dumps(sample))
+    assert parsed["passed"] is True
+    assert parsed["model"] == "SAMSUNG MZ7L3480HCHQ-00A07"
+    assert parsed["size_bytes"] == 480103981056
+    assert parsed["reallocated_sector_ct"] == 0
+    assert parsed["pending_sector_count"] == 0
+    assert parsed["uncorrectable_errors"] == 0
+
+
+def test_parse_smartctl_json_failing_disk() -> None:
+    """A failing SMART self-test must propagate as ``passed = False``."""
+    sample = {
+        "model_name": "FAULTY_DISK_X1",
+        "serial_number": "ZZZ001",
+        "user_capacity": {"bytes": 1024},
+        "smart_status": {"passed": False},
+        "ata_smart_attributes": {
+            "table": [
+                {"name": "Reallocated_Sector_Ct", "raw": {"value": 137}},
+                {"name": "Current_Pending_Sector", "raw": {"value": 42}},
+                {"name": "Offline_Uncorrectable", "raw": {"value": 9}},
+            ]
+        },
+    }
+    parsed = parse_smartctl_json(json.dumps(sample))
+    assert parsed["passed"] is False
+    assert parsed["reallocated_sector_ct"] == 137
+    assert parsed["pending_sector_count"] == 42
+    assert parsed["uncorrectable_errors"] == 9
 
 
 def test_parse_sysbench_cpu_summary() -> None:
